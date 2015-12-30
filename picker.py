@@ -33,9 +33,10 @@ class Picker:
     selected = 0
     selcount = 0
     aborted = False
-    
+    showDiff = None
+
     window_height = 15
-    window_width = 60
+    window_width = 120
     all_options = []
     length = 0
     
@@ -62,8 +63,10 @@ class Picker:
 
         ret_s = filter(lambda x: x["selected"], self.all_options)
         ret = map(lambda x: x["label"], ret_s)
-        return( ret )
-        
+
+        # Retuns array with diff path as first element and selected list as second
+        return({"diff":self.showDiff, "checked":ret})
+
     def redraw(self):
         self.win.clear()
         self.win.border(
@@ -128,10 +131,13 @@ class Picker:
             if c == ord('q') or c == ord('Q'):
                 self.aborted = True
                 break
-            elif c == curses.KEY_UP:
+            elif c == curses.KEY_UP or c == ord('k'):
                 self.cursor = self.cursor - 1
-            elif c == curses.KEY_DOWN:
+            elif c == curses.KEY_DOWN or c == ord('j'):
                 self.cursor = self.cursor + 1
+            elif c == curses.KEY_RIGHT:
+                self.showDiff = self.cursor
+                break
             #elif c == curses.KEY_PPAGE:
             #elif c == curses.KEY_NPAGE:
             elif c == ord(' '):
@@ -159,7 +165,9 @@ class Picker:
         more="...",
         border="||--++++",
         c_selected="[X]",
-        c_empty="[ ]"
+        c_empty="[ ]",
+        options_selected=None,
+        cursor_pos=0
     ):
         self.title = title
         self.arrow = arrow
@@ -168,16 +176,22 @@ class Picker:
         self.border = border
         self.c_selected = c_selected
         self.c_empty = c_empty
-        
+        self.cursor = cursor_pos
+
         self.all_options = []
-        
-        for option in options:
+
+        for i, option in enumerate(options):
             self.all_options.append({
                 "label": option,
                 "selected": False
             })
             self.length = len(self.all_options)
-        
+
+            # If I have indexes to mark as selected I do that
+            if options_selected is not None:
+                if option in options_selected:
+                    self.all_options[i]["selected"] = True
+
         self.curses_start()
         curses.wrapper( self.curses_loop )
         self.curses_stop()
