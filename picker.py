@@ -124,6 +124,7 @@ class Picker:
                 self.offset = self.offset - 1
 
     def curses_loop(self, stdscr):
+        self.selected = self.cursor + self.offset
         while 1:
             self.redraw()
             c = stdscr.getch()
