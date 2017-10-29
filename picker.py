@@ -37,7 +37,7 @@ class Picker:
     commit = False
     revert = False
 
-    window_height = 25
+    window_height = 20
     window_width = 100
     all_options = []
     length = 0
