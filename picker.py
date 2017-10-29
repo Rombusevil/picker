@@ -33,7 +33,9 @@ class Picker:
     selected = 0
     selcount = 0
     aborted = False
-    showDiff = None
+    highlighted_row = None
+    commit = False
+    revert = False
 
     window_height = 25
     window_width = 100
@@ -64,8 +66,8 @@ class Picker:
         ret_s = filter(lambda x: x["selected"], self.all_options)
         ret = map(lambda x: x["label"], ret_s)
 
-        # Retuns array with diff path as first element and selected list as second
-        return({"diff":self.showDiff, "checked":ret})
+        # Retuns array with highlighted path as first element and selected list as last (checked)
+        return({"highlighted":self.highlighted_row, "commit":self.commit, "revert":self.revert, "checked":ret})
 
     def redraw(self):
         self.win.clear()
@@ -128,23 +130,35 @@ class Picker:
         while 1:
             self.redraw()
             c = stdscr.getch()
+            self.revert = False
+            self.commit = False
+            self.highlighted_row = None
 
+            # Quit
             if c == ord('q') or c == ord('Q'):
                 self.aborted = True
                 break
+            # Navigation
             elif c == curses.KEY_UP or c == ord('k'):
                 self.cursor = self.cursor - 1
             elif c == curses.KEY_DOWN or c == ord('j'):
                 self.cursor = self.cursor + 1
+            # Show diff
             elif c == curses.KEY_RIGHT:
-                self.showDiff = self.cursor
+                self.highlighted_row = self.cursor
                 break
-            #elif c == curses.KEY_PPAGE:
-            #elif c == curses.KEY_NPAGE:
+            # Revert file
+            elif c == curses.KEY_LEFT:
+                self.highlighted_row = self.cursor
+                self.revert = True
+                break
+			# Mark file
             elif c == ord(' '):
                 self.all_options[self.selected]["selected"] = \
                     not self.all_options[self.selected]["selected"]
+            # Commit
             elif c == 10:
+                self.commit = True
                 break
 
             # deal with interaction limits
@@ -158,17 +172,17 @@ class Picker:
             self.selcount = len(temp)
 
     def __init__(
-        self,
-        options,
-        title='Select',
-        arrow="-->",
-        footer="Space = toggle, Enter = accept, q = cancel",
-        more="...",
-        border="||--++++",
-        c_selected="[X]",
-        c_empty="[ ]",
-        options_selected=None,
-        cursor_pos=0
+            self,
+            options,
+            title='Select',
+            arrow="-->",
+            footer="Space = toggle, Enter = accept, q = cancel",
+            more="...",
+            border="||--++++",
+            c_selected="[X]",
+            c_empty="[ ]",
+            options_selected=None,
+            cursor_pos=0
     ):
         self.title = title
         self.arrow = arrow
@@ -194,5 +208,5 @@ class Picker:
                     self.all_options[i]["selected"] = True
 
         self.curses_start()
-        curses.wrapper( self.curses_loop )
+        curses.wrapper(self.curses_loop)
         self.curses_stop()
