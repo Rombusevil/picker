@@ -16,6 +16,7 @@
 
 import curses
 import curses.wrapper
+import sys
 
 class Picker:
     """Allows you to select from a list with curses"""
@@ -77,9 +78,11 @@ class Picker:
             self.border[4], self.border[5],
             self.border[6], self.border[7]
         )
-        self.win.addstr(
-            self.window_height + 4, 5, " " + self.footer + " "
-        )
+
+        try:
+            self.win.addstr(self.window_height + 4, 5, " " + self.footer + " ")
+        except (curses.error):
+            pass
 
         position = 0
         range = self.all_options[self.offset:self.offset+self.window_height+1]
